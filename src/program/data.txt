@@ -1,0 +1,11 @@
+azithromycin-Zithromax-Zmax,diarrhea-diarrhoea,pain,vomit,anxious;
+Amoxicillin-Moxatag-amoxycillin,headache,diarrhea-diarrhoea,vomit;
+Doxycycline-Acticlate-Adoxa-Alodox-Avidoxy-Doryx-Monodox-Morgidox-Oracea-Oraxyl-Targadox-Vibramycin,15-headache,18-cold,20-discomfort-distress;
+ciprofloxacin-cipro-proquin,2-fungal infection,2-vaginal inflammation,4-discomfort-distress,2-headache;
+clindamycin-cleocin,60-acne,40-erythema-red skin,15-oily skin,30-exfoliation-peeling,30-pruritus-itching,5-back pain;
+metronidazole-flagyl,13-stinging,12-cramp-cramps,10-fungal infection,10-vaginal itching,7-bacterial infection;
+Sulfamethoxazole-Trimethoprim,diarrhea-diarrhoea,headache,nausea-stomach-vomit,rash,vomit;
+ofloxacin-floxin,2-glucose low,1-ear pain,1-rash,1-diarrhea-diarrhoea;
+acetaminophen-paracetamol-actamin-anacin-apra-bromo seltzer-mapap-silapap-tactinal-tycolene-tylenol-vitapap,6-nervous system disorder,8-mental disorder,8-insomnia,4-headache,2-cough;
+lisinopril-prinivil-qbrelis-zestril,15-dizziness,10-hypotension-high blood pressure,5-headache,4-chest pain,5-fatigue;
+hydrocodone-hysingla-zohydro,9-constipation,8-nausea-stomach-vomit,3-vomit,3-urinary tract infection-urinal infection,2-dizziness,2-back pain;
