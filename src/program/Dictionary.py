@@ -5,6 +5,7 @@ Created on 4 gru 2017
 '''
 import plotly.plotly as py
 import plotly.graph_objs as go
+from _overlapped import NULL
 
 class Dictionary:
     
@@ -13,26 +14,25 @@ class Dictionary:
     adrs=[] #tablica tablic z odpowiadaj¹cymi numerem glownym lekom z drugs, elementem tablicy jest tablica z roznymi skutkami ubocznymi'''
             #(pierwsza jest liczba procent u ilu wystepuje'''
     
-    
     drugs=[] #'''tablica tablic z lekami (kilka nazw w jednym elemencie tablicy)'''
-    
     
     tweets=[] #'''tablica z wypowiedziami ludzi, jedna wypowiedz to jeden element'''
     
-    
     pairsTweetDrug=[] #'''para oznaczajaca w jakim tweecie znaleziono lek i - numer tweetu, j - jaki lek znaleziono'''
-    
     
     adrList=[] #'''lista wszystkich skutkow ubocznych zawartych w danych '''
     
+    finalData=[] #Tablica z trojkami cyfr - 1. numer tweetu, 2. numer leku 3. tablica skutków
     
-    finalData=[]
+    percents=[] #Tablica o takiej samej wielkosci co adry, na miejscach adrow sa cyfry oznaczajace procenty wystepowania
     
-    percents=[]
-    
-    adrswithoutpercent=[]
+    adrswithoutpercent=[] #To samo co tablica adrs[] tylko z usunietymi procentami
 
+    adrsWithoutPercentUpgraded=[]
+    
+    sumsOfDrugs=[] #Tablica sum ilosci wystepowan tweetow o danych lekach
  
+    sumsOfAdrs=[]
  
     ######    FUNKCJE
     
@@ -73,13 +73,15 @@ class Dictionary:
         self.adrs=self.getAdrTemp("data.txt")   #dac zmienna fileName!!!
         
     def printAllData(self):
-        print("\nADRY W ODPOWIEDNIEJ KOLEJNOSCI:\n",self.adrs)
+        #print("\nADRY W ODPOWIEDNIEJ KOLEJNOSCI:\n",self.adrs)
         print("\nDRUGS W ODPOWIEDNIEJ KOLEJNOSCI:\n", self.drugs)
         #print("\nTWEETY LUDZI:\n",self.tweets)
         print("\nLISTA WSZYSTKICH ADROW:\n",self.adrList)
         print("\nFINAL DATA CZYLI TWEET, LEK, SKUTKI:\n",self.finalData,"\n")
-        #print("\nADRY BEZ PROCENTOW:\n",self.adrswithoutpercent)
+        print("\nADRY BEZ PROCENTOW:\n",self.adrswithoutpercent)
         #print("\nPERCENTY SAME:\n",self.percents)
+        print("\nADRY UZUPELNIONE O ODCZYTANE SKUTKI:\n",self.adrsWithoutPercentUpgraded)
+
         
     def createListOfAdrs(self):
         spl=[[] for i in range(len(self.adrs))]
@@ -136,10 +138,12 @@ class Dictionary:
                 triple=[self.pairsTweetDrug[i][0],self.pairsTweetDrug[i][1],adrsFromTweet]
                 self.finalData.append(triple)
     
+        self.upgradeAdrWithNewAdrs()
+        
     def createFirstColumnInTable(self):
         column=[]
-        for i in range(0,len(self.adrs)):
-            for j in range(0,len(self.adrs[i])):
+        for i in range(0,len(self.adrsWithoutPercentUpgraded)):
+            for j in range(0,len(self.adrsWithoutPercentUpgraded[i])):
                 if j==0:
                     column.append(self.drugs[i][0])
                 else:
@@ -164,11 +168,25 @@ class Dictionary:
                     self.adrswithoutpercent[i][j]=self.adrs[i][j].replace(temp,'')
                     self.percents[i][j]=split[0]
         
+    def upgradeAdrWithNewAdrs(self):
+        self.separatePercentFromAdr()
+        for i in range(0,len(self.adrswithoutpercent)):
+            temp=[]
+            for j in range (0,len(self.adrswithoutpercent[i])):
+                temp.append(self.adrswithoutpercent[i][j])
+            self.adrsWithoutPercentUpgraded.append(temp)
+            
+        for i in range(0, len(self.finalData)):
+            for j in range(0,len(self.finalData[i][2])):
+                if self.adrList[self.finalData[i][2][j]] not in self.adrswithoutpercent[self.finalData[i][1]]:
+                    self.adrsWithoutPercentUpgraded[self.finalData[i][1]].append(self.adrList[self.finalData[i][2][j]])
+                    self.percents[self.finalData[i][1]].append('')
+                    
     def createAdrColumnInTable(self):
         column=[]
-        for i in range(0,len(self.adrswithoutpercent)):
-            for j in range(0,len(self.adrswithoutpercent[i])):
-                split=self.adrswithoutpercent[i][j].split('-')
+        for i in range(0,len(self.adrsWithoutPercentUpgraded)):
+            for j in range(0,len(self.adrsWithoutPercentUpgraded[i])):
+                split=self.adrsWithoutPercentUpgraded[i][j].split('-')
                 column.append(split[0])
         return column
     
@@ -182,8 +200,42 @@ class Dictionary:
                     display=self.percents[i][j]+' %'
                     column.append(display)
         return column 
-        
+    '''
+    def isOneAdrFromDrug(self,element,element2):
+        for i in range(0,len(self.adrsWithoutPercentUpgraded[element2])):
+                if self.adrList[element] in self.adrsWithoutPercentUpgraded[element2][i]:
+                    return True
+        return False
     
+    def whichAdrFromDrug(self, element, element2):
+        for i in range(0,len(self.adrsWithoutPercentUpgraded[element2])):
+                if self.adrList[element] in self.adrsWithoutPercentUpgraded[element2][i]:
+                    return i
+        return NULL
+     
+    def calculatePercentageOfAdr(self):
+        for i in range(0,len(self.drugs)):
+            self.sumsOfDrugs.append(0)
+        for i in range(0,len(self.adrsWithoutPercentUpgraded)):
+            temp=[]
+            for j in range(0,len(self.adrsWithoutPercentUpgraded[i])):
+                temp.append(0)
+            self.sumsOfAdrs.append(temp)
+        for i in range(0,len(self.drugs)):
+                for j in range(0,len(self.pairsTweetDrug)):
+                        if self.pairsTweetDrug[j][1]==i:
+                            self.sumsOfDrugs[i]=self.sumsOfDrugs[i]+1
+        for i in range(0,len(self.finalData)):
+            for j in range(0,len(self.finalData[i][2])):
+                for k in range(0, len(self.adrsWithoutPercentUpgraded)):
+                    if self.isOneAdrFromDrug(self.finalData[i][2][j],k):
+                        self.sumsOfAdrs[k][self.whichAdrFromDrug(self.finalData[i][2][j],k)]=self.sumsOfAdrs[k][self.whichAdrFromDrug(self.finalData[i][2][j],k)]+1
+        print(self.sumsOfDrugs)
+        print(self.sumsOfAdrs)
+     '''                   
+    #def createReadColumnInTable(self):
+       
+        
     def fillTable(self):
         cellsh=dict(values=[self.createFirstColumnInTable(),
                            self.createAdrColumnInTable(),

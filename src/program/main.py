@@ -8,6 +8,7 @@ from program.Dictionary import Dictionary
 if __name__ == '__main__':
     dict=Dictionary()
     dict.basicMethod()
-    dict.separatePercentFromAdr()
     dict.fillTable()
-    #dict.printAllData()
+    #dict.calculatePercentageOfAdr()
+    dict.printAllData()
+    
