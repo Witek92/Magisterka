@@ -28,11 +28,11 @@ class Dictionary:
     
     adrswithoutpercent=[] #To samo co tablica adrs[] tylko z usunietymi procentami
 
-    adrsWithoutPercentUpgraded=[]
+    adrsWithoutPercentUpgraded=[] #Tablica skutkow ubocznych (stworzona na podstawie adrswithoutpercent[]), ale z dodanymi nowo znalezionymi skutkami.
     
     sumsOfDrugs=[] #Tablica sum ilosci wystepowan tweetow o danych lekach
  
-    sumsOfAdrs=[]
+    sumsOfAdrs=[] #Tablica tablic z ilosciami wystapien skutku ubocznego w danym leku.
  
     ######    FUNKCJE
     
@@ -81,7 +81,6 @@ class Dictionary:
         print("\nADRY BEZ PROCENTOW:\n",self.adrswithoutpercent)
         #print("\nPERCENTY SAME:\n",self.percents)
         print("\nADRY UZUPELNIONE O ODCZYTANE SKUTKI:\n",self.adrsWithoutPercentUpgraded)
-
         
     def createListOfAdrs(self):
         spl=[[] for i in range(len(self.adrs))]
@@ -139,7 +138,7 @@ class Dictionary:
                 self.finalData.append(triple)
     
         self.upgradeAdrWithNewAdrs()
-        
+        self.calculatePercentageOfAdr()
     def createFirstColumnInTable(self):
         column=[]
         for i in range(0,len(self.adrsWithoutPercentUpgraded)):
@@ -178,7 +177,7 @@ class Dictionary:
             
         for i in range(0, len(self.finalData)):
             for j in range(0,len(self.finalData[i][2])):
-                if self.adrList[self.finalData[i][2][j]] not in self.adrswithoutpercent[self.finalData[i][1]]:
+                if self.adrList[self.finalData[i][2][j]] not in self.adrswithoutpercent[self.finalData[i][1]] and self.adrList[self.finalData[i][2][j]] not in self.adrsWithoutPercentUpgraded[self.finalData[i][1]]:
                     self.adrsWithoutPercentUpgraded[self.finalData[i][1]].append(self.adrList[self.finalData[i][2][j]])
                     self.percents[self.finalData[i][1]].append('')
                     
@@ -237,15 +236,16 @@ class Dictionary:
         column=[]
         for i in range(0,len(self.adrsWithoutPercentUpgraded)):
             for j in range(0,len(self.adrsWithoutPercentUpgraded[i])):
-                if self.sumsOfDrugs[i]!=0:
+                if self.sumsOfDrugs[i]!=0 and self.sumsOfAdrs[i][j]!=0:
                     temp=self.sumsOfAdrs[i][j]/self.sumsOfDrugs[i]*100
                     temp=str(temp)+' %'
                     column.append(temp)
+                elif self.sumsOfAdrs[i][j]==0 and self.sumsOfDrugs[i]!=0:
+                    column.append('0 %')
                 else:
                     column.append('X')
         return column
-                
-        
+                        
     def fillTable(self):
         cellsh=dict(values=[self.createFirstColumnInTable(),
                            self.createAdrColumnInTable(),
