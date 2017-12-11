@@ -200,7 +200,7 @@ class Dictionary:
                     display=self.percents[i][j]+' %'
                     column.append(display)
         return column 
-    '''
+    
     def isOneAdrFromDrug(self,element,element2):
         for i in range(0,len(self.adrsWithoutPercentUpgraded[element2])):
                 if self.adrList[element] in self.adrsWithoutPercentUpgraded[element2][i]:
@@ -228,19 +228,29 @@ class Dictionary:
         for i in range(0,len(self.finalData)):
             for j in range(0,len(self.finalData[i][2])):
                 for k in range(0, len(self.adrsWithoutPercentUpgraded)):
-                    if self.isOneAdrFromDrug(self.finalData[i][2][j],k):
+                    if self.isOneAdrFromDrug(self.finalData[i][2][j],k) and self.finalData[i][1]==k:
                         self.sumsOfAdrs[k][self.whichAdrFromDrug(self.finalData[i][2][j],k)]=self.sumsOfAdrs[k][self.whichAdrFromDrug(self.finalData[i][2][j],k)]+1
         print(self.sumsOfDrugs)
         print(self.sumsOfAdrs)
-     '''                   
-    #def createReadColumnInTable(self):
-       
+                        
+    def createReadColumnInTable(self):
+        column=[]
+        for i in range(0,len(self.adrsWithoutPercentUpgraded)):
+            for j in range(0,len(self.adrsWithoutPercentUpgraded[i])):
+                if self.sumsOfDrugs[i]!=0:
+                    temp=self.sumsOfAdrs[i][j]/self.sumsOfDrugs[i]*100
+                    temp=str(temp)+' %'
+                    column.append(temp)
+                else:
+                    column.append('X')
+        return column
+                
         
     def fillTable(self):
         cellsh=dict(values=[self.createFirstColumnInTable(),
                            self.createAdrColumnInTable(),
                            self.createDeclaredColumnInTable(),
-                           [95, 85, 75, 95]])
+                           self.createReadColumnInTable()])
         trace = go.Table(
         header=dict(values=['Lek', 'Skutki uboczne','deklarowane','odczytane']),
         cells=cellsh)
