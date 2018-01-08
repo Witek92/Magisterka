@@ -1,13 +1,14 @@
 '''
-Created on 4 gru 2017
+Created on 21 lis 2017
 
 @author: Witek
 '''
 import plotly.plotly as py
 import plotly.graph_objs as go
 from _overlapped import NULL
+from nltk.corpus import wordnet
 
-class Dictionary:
+class AdrDetection:
     
     ######   ZMIENNE
     
@@ -113,13 +114,40 @@ class Dictionary:
                         pair=[i,j] 
                         '''para oznaczajaca w jakim tweecie znaleziono lek i - numer tweetu, j - jaki lek znaleziono'''
                         self.pairsTweetDrug.append(pair)
- 
+      
     def getAdrsFromTweetForDrug(self, pair): 
         '''funkcja pobiera jeden element z tablicy par tweetow-lekow i zwraca liste numerow skutkow znalezionych w tweecie z tym lekiem'''
         adrNrsFromTweet=[]
         for i in range(0,len(self.adrList)):
             if self.adrList[i] in self.tweets[pair[0]]:
                 adrNrsFromTweet.append(i)
+        return adrNrsFromTweet
+    
+    def getAdrsFromTweetForDrugWordNet(self, pair): 
+        adrNrsFromTweet=[]
+        
+        for i in range(0,len(self.adrList)):
+            synonyms=[]
+            for syn in wordnet.synsets(self.adrList[i]):
+                for lemma in syn.lemmas():
+                    synonyms.append(lemma.name())
+            for j in range(0,len(synonyms)):
+                if synonyms[j] in self.tweets[pair[0]] and i not in adrNrsFromTweet:
+                    adrNrsFromTweet.append(i)
+        return adrNrsFromTweet
+       
+    def getAdrsFromTweetForDrugHuman(self, pair): 
+        adrNrsFromTweet=[]
+        humanAdrs=[]
+        f=open('otherAdrExpressions.txt','r')
+        for line in f:
+            line=line.lower()
+            temp=line.split(",")
+            humanAdrs.append(temp)
+        for i in range(0,len(self.adrList)):
+                for j in range(0,len(humanAdrs[i])):
+                    if humanAdrs[i][j] in self.tweets[pair[0]] and i not in adrNrsFromTweet:
+                        adrNrsFromTweet.append(i)
         return adrNrsFromTweet
        
     def basicMethod(self):
@@ -139,6 +167,42 @@ class Dictionary:
     
         self.upgradeAdrWithNewAdrs()
         self.calculatePercentageOfAdr()
+        
+    def wordNetMethod(self):
+        adrsFromTweet=[]
+        triple=[]
+        self.readDrugsAndAdrsToArrays()
+        self.readTweetsToArray()
+        self.createListOfAdrs()
+        self.findPairTweetDrug()
+        
+        for i in range(0,len(self.pairsTweetDrug)):    
+            adrsFromTweet=self.getAdrsFromTweetForDrugWordNet(self.pairsTweetDrug[i])
+            if adrsFromTweet:
+                triple=[]
+                triple=[self.pairsTweetDrug[i][0],self.pairsTweetDrug[i][1],adrsFromTweet]
+                self.finalData.append(triple)
+    
+        self.upgradeAdrWithNewAdrs()
+        self.calculatePercentageOfAdr()       
+        
+    def humanMethod(self):
+        adrsFromTweet=[]
+        triple=[]
+        self.readDrugsAndAdrsToArrays()
+        self.readTweetsToArray()
+        self.createListOfAdrs()
+        self.findPairTweetDrug()
+        
+        for i in range(0,len(self.pairsTweetDrug)):    
+            adrsFromTweet=self.getAdrsFromTweetForDrugHuman(self.pairsTweetDrug[i])
+            if adrsFromTweet:
+                triple=[]
+                triple=[self.pairsTweetDrug[i][0],self.pairsTweetDrug[i][1],adrsFromTweet]
+                self.finalData.append(triple)
+    
+        self.upgradeAdrWithNewAdrs()
+        self.calculatePercentageOfAdr()   
     def createFirstColumnInTable(self):
         column=[]
         for i in range(0,len(self.adrsWithoutPercentUpgraded)):
@@ -179,7 +243,7 @@ class Dictionary:
             for j in range(0,len(self.finalData[i][2])):
                 if self.adrList[self.finalData[i][2][j]] not in self.adrswithoutpercent[self.finalData[i][1]] and self.adrList[self.finalData[i][2][j]] not in self.adrsWithoutPercentUpgraded[self.finalData[i][1]]:
                     self.adrsWithoutPercentUpgraded[self.finalData[i][1]].append(self.adrList[self.finalData[i][2][j]])
-                    self.percents[self.finalData[i][1]].append('')
+                    self.percents[self.finalData[i][1]].append('X')
                     
     def createAdrColumnInTable(self):
         column=[]
@@ -195,6 +259,8 @@ class Dictionary:
             for j in range(0,len(self.percents[i])):
                 if self.percents[i][j]=='':
                     column.append('?')
+                elif self.percents[i][j]=='X':
+                    column.append('X')
                 else:
                     display=self.percents[i][j]+' %'
                     column.append(display)
@@ -238,7 +304,7 @@ class Dictionary:
             for j in range(0,len(self.adrsWithoutPercentUpgraded[i])):
                 if self.sumsOfDrugs[i]!=0 and self.sumsOfAdrs[i][j]!=0:
                     temp=self.sumsOfAdrs[i][j]/self.sumsOfDrugs[i]*100
-                    temp=str(temp)+' %'
+                    temp=str(round(temp,1))+' %'
                     column.append(temp)
                 elif self.sumsOfAdrs[i][j]==0 and self.sumsOfDrugs[i]!=0:
                     column.append('0 %')
@@ -256,6 +322,6 @@ class Dictionary:
         cells=cellsh)
      
         data = [trace] 
-        py.plot(data, filename = 'example_table')
+        py.plot(data, filename = 'result_presentation_table')
         
         
