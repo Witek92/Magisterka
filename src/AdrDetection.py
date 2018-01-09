@@ -7,6 +7,10 @@ import plotly.plotly as py
 import plotly.graph_objs as go
 from _overlapped import NULL
 from nltk.corpus import wordnet
+from collections import Counter
+from os import path
+
+
 
 class AdrDetection:
     
@@ -101,7 +105,7 @@ class AdrDetection:
                                 
     def readTweetsToArray(self):
         fileName=input("Podaj nazwe pliku z danymi wolnych wypowiedzi pacjentow: ")
-        with open('tweets.txt', 'r') as myfile:
+        with open("tweets.txt", 'r') as myfile:
             data=myfile.read().replace('\n', '')
             data=data.lower()
         self.tweets=data.split(';;;;;;')
@@ -139,7 +143,7 @@ class AdrDetection:
     def getAdrsFromTweetForDrugHuman(self, pair): 
         adrNrsFromTweet=[]
         humanAdrs=[]
-        f=open('otherAdrExpressions.txt','r')
+        f=open("otherAdrExpressions.txt",'r')
         for line in f:
             line=line.lower()
             temp=line.split(",")
@@ -295,8 +299,8 @@ class AdrDetection:
                 for k in range(0, len(self.adrsWithoutPercentUpgraded)):
                     if self.isOneAdrFromDrug(self.finalData[i][2][j],k) and self.finalData[i][1]==k:
                         self.sumsOfAdrs[k][self.whichAdrFromDrug(self.finalData[i][2][j],k)]=self.sumsOfAdrs[k][self.whichAdrFromDrug(self.finalData[i][2][j],k)]+1
-        print(self.sumsOfDrugs)
-        print(self.sumsOfAdrs)
+        #print(self.sumsOfDrugs)
+        #print(self.sumsOfAdrs)
                         
     def createReadColumnInTable(self):
         column=[]
@@ -324,4 +328,60 @@ class AdrDetection:
         data = [trace] 
         py.plot(data, filename = 'result_presentation_table')
         
+    def lematisation(self):
+        from nltk import word_tokenize
+        from nltk.corpus import stopwords
+        from nltk.tokenize import RegexpTokenizer
+
         
+        self.readTweetsToArray()
+
+        stopset = set(stopwords.words('english'))
+        tokenizer = RegexpTokenizer(r'\w+')
+        tweetsClean=[]
+
+        for i in range(len(self.tweets)):
+            temp=tokenizer.tokenize(str(self.tweets[i]))
+            temp = [w for w in temp if not w in stopset]
+            temp.append('nausea') ##### !!!! Zamiast tego  trzeba dodaæ na koniec numer skutku ubocznego 
+            tweetsClean.append(temp)
+            
+        print(tweetsClean)
+            
+    def test(self):
+        import pandas
+        import re
+        from nltk.corpus import stopwords
+
+
+
+        self.readTweetsToArray()
+        
+        # Find all the unique words in the headlines.
+    
+        def make_matrix(headlines, vocab):
+                matrix = []
+                for headline in headlines:
+                    # Count each word in the headline, and make a dictionary.
+                    counter = Counter(headline)
+                    # Turn the dictionary into a matrix row using the vocab.
+                    row = [counter.get(w, 0) for w in vocab]
+                    matrix.append(row) 
+                df = pandas.DataFrame(matrix)
+                df.columns = unique_words
+                return df
+        #print(make_matrix(self.tweets, unique_words))  
+        
+        # Lowercase, then replace any non-letter, space, or digit character in the headlines.
+        new_headlines = [re.sub(r'[^\w\s\d]','',h.lower()) for h in self.tweets]
+        # Replace sequences of whitespace with a space character.
+        new_headlines = [re.sub("\s+", " ", h) for h in new_headlines]
+        
+        unique_words = list(set(" ".join(new_headlines).split(" ")))
+        # We've reduced the number of columns in the matrix a bit.
+        stopset = set(stopwords.words('english'))
+        stopset = [re.sub(r'[^\w\s\d]','',s.lower()) for s in stopset]
+        unique_words = [w for w in unique_words if w not in stopset]
+
+        
+
