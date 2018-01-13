@@ -14,6 +14,10 @@ import re
 from spacy.lang.en import English
 import spacy
 from cProfile import label
+from random import randint
+import plotly.plotly as py
+import plotly.graph_objs as go
+
 parser = English()
 
 
@@ -26,8 +30,7 @@ if a=='b':
         adr.humanMethod()
 if a=='c':
     adr.wordNetMethod()
-adr.printAllData()
-
+#adr.printAllData()
 
 tweetsWithoutDrugs=[] #lista tweetow, ale z wycietymi nazwami lekow
 for i in range(len(adr.tweets)):
@@ -104,16 +107,10 @@ pipe = Pipeline([('cleanText', CleanTextTransformer()), ('vectorizer', vectorize
 
 
 #        DANE
+trainNumber=20
+testNumber=78
 
-train = tweetsWithoutDrugs[:50]
-with open("trainLabels.txt", "r") as ins:
-    labelsTrain = []
-    for line in ins:
-        line=line.replace('\n','')
-        labelsTrain.append(line)
-print(labelsTrain)
 
-test = tweetsWithoutDrugs[-400:]
 labelsTestTemp = []
 for i in range(len(tweetsWithoutDrugs)):
     labelsTestTemp.append('null')
@@ -122,8 +119,48 @@ for i in range(len(tweetsWithoutDrugs)):
 for i in range(len(adr.finalData)):
     labelsTestTemp[adr.finalData[i][0]]=adr.adrList[adr.finalData[i][2][0]]
 
-labelsTest=labelsTestTemp[-400:]
 
+'''
+train = tweetsWithoutDrugs[:trainNumber]
+test = tweetsWithoutDrugs[-testNumber:]
+labelsTrain=labelsTestTemp[:trainNumber]
+labelsTest=labelsTestTemp[-testNumber:]
+'''
+
+# DANE LOSOWE
+
+## LOSOWANIE DLA DANYCH TRENUJACYCH
+trainInts=[]
+for i in range(trainNumber):
+    a=randint(0,len(tweetsWithoutDrugs)-1)
+    if a not in trainInts:
+        trainInts.append(a)
+    else:
+        while a in trainInts:
+            a=randint(0,len(tweetsWithoutDrugs)-1)
+        trainInts.append(a)
+train=[]            
+labelsTrain=[]
+for i in range(trainNumber):
+    train.append(tweetsWithoutDrugs[trainInts[i]])
+    labelsTrain.append(labelsTestTemp[trainInts[i]])
+
+## LOSOWANIE DLA DANYCH TESTOWYCH, MUSZA BYC INNE NIZ DO TRENOWANIA
+
+testInts=[]
+for i in range(testNumber):
+    a=randint(0,len(tweetsWithoutDrugs)-1)
+    if a not in trainInts and a not in testInts:
+        testInts.append(a)
+    else:
+        while a in trainInts or a in testInts:
+            a=randint(0,len(tweetsWithoutDrugs)-1)
+        testInts.append(a)
+test=[]            
+labelsTest=[]
+for i in range(testNumber):
+    test.append(tweetsWithoutDrugs[testInts[i]])
+    labelsTest.append(labelsTestTemp[testInts[i]])
 
 # trenowanie
 pipe.fit(train, labelsTrain)
@@ -131,10 +168,109 @@ pipe.fit(train, labelsTrain)
 # test
 preds = pipe.predict(test)
 
+
+ 
+ 
+### POCZATEK ALGORYTMYU MASZYNOWEGO
+
+def fillTableMachine():
+        cellsh=dict(values=[createFirstColumnInTableMachine(),
+                           adr.createAdrColumnInTable(),
+                           adr.createDeclaredColumnInTable(),
+                           adr.createReadColumnInTable()])
+        trace = go.Table(
+        header=dict(values=['Lek', 'Skutki uboczne','deklarowane','odczytane']),
+        cells=cellsh)
+     
+        data = [trace] 
+        py.plot(data, filename = 'result_presentation_table')
+
+def createFirstColumnInTableMachine():
+        column=[]
+        for i in range(0,len(adr.adrsWithoutPercentUpgraded)):
+            for j in range(0,len(adr.adrsWithoutPercentUpgraded[i])):
+                if j==0:
+                    column.append(adr.drugs[i][0])
+                else:
+                    column.append('')
+            #column.append('')
+        return column
+
+def calculatePercentageOfAdrMachine():
+        for i in range(0,len(adr.drugs)):
+            adr.sumsOfDrugs.append(0)
+        for i in range(0,len(adr.adrsWithoutPercentUpgraded)):
+            temp=[]
+            for j in range(0,len(adr.adrsWithoutPercentUpgraded[i])):
+                temp.append(0)
+            adr.sumsOfAdrs.append(temp)
+        for i in range(0,len(adr.drugs)):
+                for j in range(0,len(adr.pairsTweetDrug)):
+                        if adr.pairsTweetDrug[j][1]==i:
+                            adr.sumsOfDrugs[i]=adr.sumsOfDrugs[i]+1
+        for i in range(0,len(adr.finalData)):
+                for k in range(0, len(adr.adrsWithoutPercentUpgraded)):
+                    if adr.isOneAdrFromDrug(adr.finalData[i][2],k) and adr.finalData[i][1]==k:
+                        adr.sumsOfAdrs[k][adr.whichAdrFromDrug(adr.finalData[i][2],k)]=adr.sumsOfAdrs[k][adr.whichAdrFromDrug(adr.finalData[i][2],k)]+1
+        #print(self.sumsOfDrugs)
+        #print(self.sumsOfAdrs)
+
+def upgradeAdrWithNewAdrsMachine():
+    adr.separatePercentFromAdr()
+    for i in range(0,len(adr.adrswithoutpercent)):
+        temp=[]
+        for j in range (0,len(adr.adrswithoutpercent[i])):
+            temp.append(adr.adrswithoutpercent[i][j])
+        adr.adrsWithoutPercentUpgraded.append(temp)
+            
+    adr.finalData.sort(key=lambda x: x[0])
+    for i in range(0, len(adr.finalData)):
+        if adr.adrList[adr.finalData[i][2]] not in adr.adrswithoutpercent[adr.finalData[i][1]] and adr.adrList[adr.finalData[i][2]] not in adr.adrsWithoutPercentUpgraded[adr.finalData[i][1]]:
+            adr.adrsWithoutPercentUpgraded[adr.finalData[i][1]].append(adr.adrList[adr.finalData[i][2]])
+            adr.percents[adr.finalData[i][1]].append('X')
+
+def getAdrNo(s):
+    for i in range(len(adr.adrList)):
+        if adr.adrList[i] == s:
+            return i
+        
+def getDrugNo(s):
+    for i in range(len(adr.drugs)):
+        if adr.pairsTweetDrug[i][0]==s:
+            return adr.pairsTweetDrug[i][1]
+def getTweetDrugIndex(s):
+    for i in range(len(adr.pairsTweetDrug)):
+        if adr.pairsTweetDrug[i][0]==s:
+            return i
+    return -1
+        
+adr.adrsWithoutPercentUpgraded=[]
+adr.adrswithoutpercent=[]
+adr.percents=[]
+adr.sumsOfAdrs=[]
+adr.finalData=[]
+triple=[]
+
+#testInts.sort(key=None, reverse=False)
+        
+for i in range(testNumber):
+    if preds[i]!='null' :    
+        triple=[]
+        triple=[testInts[i],adr.pairsTweetDrug[getTweetDrugIndex(testInts[i])][1],getAdrNo(preds[i])]
+        adr.finalData.append(triple)
+
+
+    
+upgradeAdrWithNewAdrsMachine()
+calculatePercentageOfAdrMachine()
+#adr.printAllData()
+fillTableMachine()
+### KONIEC
+
 print("\n\n-----WYNIK-----\n\n")
 for (sample, pred) in zip(test, preds):
     print(sample, ":", pred)
-print("Dokladnosc: ", accuracy_score(labelsTest, preds)*100)
+print("\n\n----DOKLADNOSC----: ", accuracy_score(labelsTest, preds)*100," %\n\n")
 
 
 print("Dane po tokenizacji i lematyzacji:")
