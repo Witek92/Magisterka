@@ -30,7 +30,6 @@ if a=='b':
         adr.humanMethod()
 if a=='c':
     adr.wordNetMethod()
-#adr.printAllData()
 
 tweetsWithoutDrugs=[] #lista tweetow, ale z wycietymi nazwami lekow
 for i in range(len(adr.tweets)):
@@ -52,10 +51,7 @@ SYMBOLS = " ".join(string.punctuation).split(" ") + ["-----", "---", "...", "“
 
 #struktura do oczyszczania tekstu
 class CleanTextTransformer(TransformerMixin):
-    """
-    Convert text to cleaned text
-    """
-
+   
     def transform(self, X, **transform_params):
         return [cleanText(text) for text in X]
 
@@ -107,8 +103,8 @@ pipe = Pipeline([('cleanText', CleanTextTransformer()), ('vectorizer', vectorize
 
 
 #        DANE
-trainNumber=20
-testNumber=78
+trainNumber=80
+testNumber=500
 
 
 labelsTestTemp = []
@@ -193,7 +189,6 @@ def createFirstColumnInTableMachine():
                     column.append(adr.drugs[i][0])
                 else:
                     column.append('')
-            #column.append('')
         return column
 
 def calculatePercentageOfAdrMachine():
@@ -212,8 +207,6 @@ def calculatePercentageOfAdrMachine():
                 for k in range(0, len(adr.adrsWithoutPercentUpgraded)):
                     if adr.isOneAdrFromDrug(adr.finalData[i][2],k) and adr.finalData[i][1]==k:
                         adr.sumsOfAdrs[k][adr.whichAdrFromDrug(adr.finalData[i][2],k)]=adr.sumsOfAdrs[k][adr.whichAdrFromDrug(adr.finalData[i][2],k)]+1
-        #print(self.sumsOfDrugs)
-        #print(self.sumsOfAdrs)
 
 def upgradeAdrWithNewAdrsMachine():
     adr.separatePercentFromAdr()
@@ -243,6 +236,16 @@ def getTweetDrugIndex(s):
         if adr.pairsTweetDrug[i][0]==s:
             return i
     return -1
+
+def calculateMostFrequentAdrMachine():
+    alladrs=[]
+    adrprocents=[]
+    for i in range(len(adr.finalData)):
+        alladrs.append(adr.finalData[i][2])
+    for i in range(len(adr.adrList)):
+        adrprocents.append(alladrs.count(i)/len(alladrs)*100)
+            
+    print(adrprocents)
         
 adr.adrsWithoutPercentUpgraded=[]
 adr.adrswithoutpercent=[]
@@ -251,7 +254,6 @@ adr.sumsOfAdrs=[]
 adr.finalData=[]
 triple=[]
 
-#testInts.sort(key=None, reverse=False)
         
 for i in range(testNumber):
     if preds[i]!='null' :    
@@ -263,8 +265,13 @@ for i in range(testNumber):
     
 upgradeAdrWithNewAdrsMachine()
 calculatePercentageOfAdrMachine()
-#adr.printAllData()
+adr.printAllData()
 fillTableMachine()
+adr.calculatePercentOfNewReadAdrs()
+adr.calculateAverageDifference()
+adr.calculatePercentOfNotReadAdrs()
+calculateMostFrequentAdrMachine()
+    
 ### KONIEC
 
 print("\n\n-----WYNIK-----\n\n")

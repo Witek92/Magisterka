@@ -18,5 +18,9 @@ if __name__ == '__main__':
     
     adr.fillTable()
     adr.printAllData()
-    
+    adr.calculatePercentOfNewReadAdrs()
+    adr.calculateAverageDifference()
+    adr.calculatePercentOfNotReadAdrs()
+    adr.calculateMostFrequentAdr()
+
     

@@ -105,7 +105,7 @@ class AdrDetection:
                                 
     def readTweetsToArray(self):
         fileName=input("Podaj nazwe pliku z danymi wolnych wypowiedzi pacjentow: ")
-        with open("tweetsFriends.txt", 'r') as myfile:
+        with open("tweets.txt", 'r') as myfile:
             data=myfile.read().replace('\n', '')
             data=data.lower()
         self.tweets=data.split(';;;;;;')
@@ -330,3 +330,57 @@ class AdrDetection:
         data = [trace] 
         py.plot(data, filename = 'result_presentation_table')
         
+    def calculatePercentOfNewReadAdrs(self):
+        count=0
+        sum=0
+        for i in range(len(self.adrswithoutpercent)):
+            if len(self.adrsWithoutPercentUpgraded[i]) > len(self.adrswithoutpercent[i]):
+                for j in range(len(self.adrswithoutpercent[i]),len(self.adrsWithoutPercentUpgraded[i])):
+                    if self.sumsOfAdrs[i][j]!=0:
+                        count=count+1
+                sum=sum+count
+            sum=sum+len(self.adrswithoutpercent[i])
+
+        percentage=count/sum*100
+        print(percentage)
+        
+    def calculateAverageDifference(self):
+        difference=0
+        differencesum=0
+        l=0
+        print(self.percents)
+        print(self.sumsOfAdrs)
+        for i in range(len(self.adrswithoutpercent)):
+            for j in range(len(self.adrswithoutpercent[i])):
+                if self.percents[i][j]!='':
+                    difference=abs(int(self.percents[i][j])-self.sumsOfAdrs[i][j])
+                    differencesum=differencesum+difference
+                    l=l+1
+        average=differencesum/l
+        print(average)
+        
+    def calculatePercentOfNotReadAdrs(self):
+        count=0
+        countsum=0
+        for i in range(len(self.adrswithoutpercent)):
+            for j in range(len(self.adrswithoutpercent[i])):
+                if self.percents[i][j]!='' and self.sumsOfAdrs[i][j]==0:
+                    count=count+1
+                if self.percents[i][j]!='':
+                    countsum=countsum+1
+            
+            
+
+        percentage=count/countsum*100
+        print(percentage)
+        
+    def calculateMostFrequentAdr(self):
+        alladrs=[]
+        adrprocents=[]
+        for i in range(len(self.finalData)):
+            for j in range(len(self.finalData[i][2])):
+                alladrs.append(self.finalData[i][2][j])
+        for i in range(len(self.adrList)):
+            adrprocents.append(alladrs.count(i)/len(alladrs)*100)
+            
+        print(adrprocents)
